@@ -20,8 +20,6 @@ one during design meetings.
 
 ## 1. Layout
 
-![layout](./assets/layout.txt)  <!-- placeholder, see sketch below -->
-
 ```
 ┌─── Localization Prototype ──────────────────────────────────────────────────┐
 │ [ Localization ]  [ Calibration / Precision ]                                │
