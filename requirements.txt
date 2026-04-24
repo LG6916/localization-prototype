@@ -1,0 +1,19 @@
+numpy==1.26.4
+scipy>=1.11
+scikit-learn>=1.3
+open3d==0.18.0
+trimesh>=4.0
+rtree>=1.0
+plyfile>=1.0
+dash>=3.0
+dash-bootstrap-components>=2.0
+plotly>=6.0
+Flask>=2.3,<3
+Werkzeug>=2.3,<3
+diskcache>=5.6
+psutil>=5.9
+multiprocess>=0.70
+
+# Optional: 2D open-vocab detector (YOLO-World). Pulls torch + ultralytics.
+# Comment out to keep the baseline prototype lean.
+ultralytics>=8.3

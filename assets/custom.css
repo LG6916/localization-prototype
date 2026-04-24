@@ -1,0 +1,435 @@
+/* =========================================================================
+   Localization Prototype — theme.
+   Palette is deliberately small. All foreground/background pairs below are
+   checked against WCAG AA (4.5:1 normal text, 3:1 large/semibold).
+
+     --bg-body   #1d2128   body background
+     --bg-panel  #2a2f38   main panels (elevated 1)
+     --bg-card   #343a44   cards/rows inside panels (elevated 2)
+     --bg-input  #242932   form inputs (inset)
+     --border    #3d4452
+     --text      #e8ecf1   primary   (14:1 on bg-body)
+     --text-dim  #b8c1cc   secondary (7.6:1 on bg-body, 6.0:1 on bg-panel)
+     --text-mut  #93a0af   muted     (4.6:1 on bg-body, 3.8:1 bg-panel — use
+                                     only for secondary info and small text
+                                     that's still part of a labeled block)
+     --accent    #4a9eff
+     --ok        #7ed492
+     --warn      #f0ca7f
+     --err       #ff6b6b
+   ========================================================================= */
+
+:root {
+  --bg-body:  #1d2128;
+  --bg-panel: #2a2f38;
+  --bg-card:  #343a44;
+  --bg-input: #242932;
+  --border:   #3d4452;
+  --border-soft: #333944;
+  --text:     #e8ecf1;
+  --text-dim: #b8c1cc;
+  --text-mut: #93a0af;
+  --accent:   #4a9eff;
+  --accent-dim: #2d78d0;
+  --ok:       #7ed492;
+  --warn:     #f0ca7f;
+  --err:      #ff6b6b;
+
+  /* Dash 4 design system tokens. Defaults are a light theme (white fills,
+     dark text); we remap to our dark palette so dcc.Dropdown, Checklist,
+     DatePicker etc. render correctly. */
+  --Dash-Fill-Inverse-Strong:     var(--bg-input);
+  --Dash-Fill-Interactive-Strong: var(--accent);
+  --Dash-Fill-Interactive-Weak:   rgba(74, 158, 255, 0.18);
+  --Dash-Fill-Disabled:           rgba(255, 255, 255, 0.08);
+  --Dash-Fill-Primary-Hover:      rgba(255, 255, 255, 0.06);
+  --Dash-Fill-Primary-Active:     rgba(255, 255, 255, 0.12);
+  --Dash-Stroke-Strong:           var(--border);
+  --Dash-Stroke-Weak:             var(--border-soft);
+  --Dash-Shading-Strong:          rgba(0, 0, 0, 0.4);
+  --Dash-Shading-Weak:            rgba(0, 0, 0, 0.2);
+  --Dash-Text-Primary:            var(--text);
+  --Dash-Text-Strong:             var(--text);
+  --Dash-Text-Weak:               var(--text-dim);
+  --Dash-Text-Disabled:           var(--text-mut);
+}
+
+html, body {
+  background: var(--bg-body) !important;
+  color: var(--text) !important;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---- Header ---- */
+.app-header {
+  padding: 10px 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+}
+.app-header h3 { margin: 0; font-size: 17px; font-weight: 600; color: var(--text); }
+.app-header .sub { color: var(--text-dim); font-size: 12px; }
+
+/* ---- Tabs (top nav) ---- */
+.tab-content > .tab-pane { padding: 12px 14px 0 14px; }
+.nav-tabs {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-body);
+  padding: 0 12px;
+}
+.nav-tabs .nav-link {
+  color: var(--text-dim) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px 6px 0 0 !important;
+  font-size: 13px;
+  padding: 8px 14px;
+}
+.nav-tabs .nav-link:hover {
+  color: var(--text) !important;
+  background: var(--bg-panel) !important;
+}
+.nav-tabs .nav-link.active {
+  background: var(--bg-panel) !important;
+  color: var(--text) !important;
+  border-color: var(--border) var(--border) var(--bg-panel) !important;
+}
+
+/* ---- Panels ---- */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.panel h6 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-dim); margin: 0 0 10px 0; font-weight: 700;
+}
+.panel .muted, .muted {
+  color: var(--text-mut) !important;
+  font-size: 12px;
+}
+.panel label { color: var(--text-dim); }
+
+/* ---- Advanced disclosure (pipeline stages) ---- */
+details.pipeline-advanced {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+}
+details.pipeline-advanced > summary {
+  cursor: pointer;
+  list-style: none;              /* remove default Firefox triangle */
+  user-select: none;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.1s;
+}
+details.pipeline-advanced > summary::-webkit-details-marker { display: none; }  /* Chrome/Safari */
+details.pipeline-advanced > summary::before {
+  content: "";
+  display: inline-block;
+  width: 0; height: 0;
+  border-left: 5px solid var(--text-mut);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s ease;
+  transform-origin: 25% 50%;
+}
+details.pipeline-advanced[open] > summary::before {
+  transform: rotate(90deg);
+}
+details.pipeline-advanced > summary:hover {
+  color: var(--text);
+}
+details.pipeline-advanced > summary:hover::before {
+  border-left-color: var(--text);
+}
+details.pipeline-advanced[open] > summary {
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* ---- Stage cards (inside pipeline panel) ---- */
+.stage-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.stage-card .slot-label {
+  font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+  font-weight: 700; margin-bottom: 4px;
+}
+.stage-card .stage-body { font-size: 12px; color: var(--text); }
+
+/* ---- Metric grid (run summary) ---- */
+.metric-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px 12px; font-size: 12px;
+}
+.metric-grid .k { color: var(--text-dim); }
+.metric-grid .v { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 500; }
+
+/* ---- Detection rows ---- */
+.det-row {
+  display: grid; grid-template-columns: 36px 1fr auto; gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 5px; cursor: pointer;
+  border: 1px solid transparent;
+  background: var(--bg-card);
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.det-row:hover { border-color: var(--border); background: #3a414c; }
+.det-row.selected { background: #2a3c4f; border-color: var(--accent); }
+.det-row .rank { color: var(--text-mut); font-variant-numeric: tabular-nums; text-align: center; }
+.det-row .primary { font-size: 13px; color: var(--text); }
+.det-row .secondary { color: var(--text-dim); font-size: 11px; }
+.det-row .conf {
+  font-size: 11px; padding: 3px 8px; border-radius: 4px;
+  background: rgba(74, 158, 255, 0.18); color: #9ec7f0;
+  font-variant-numeric: tabular-nums; font-weight: 600;
+  border: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+/* ---- Trace rows (pipeline trace panel) ---- */
+.trace-row {
+  font-size: 12px;
+  padding: 7px 10px;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-card);
+  margin: 5px 0;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  color: var(--text);
+  border-radius: 0 4px 4px 0;
+}
+.trace-row .stage  { color: #9ec7f0; }
+.trace-row .timing { color: var(--ok); }
+.trace-row .count  { color: var(--warn); }
+.trace-row .method { color: #c5b5e6; }
+
+/* ---- Progress bar ---- */
+.progress-wrap {
+  background: var(--bg-input);
+  height: 26px;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border);
+}
+.progress-wrap .bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.2s;
+}
+.progress-wrap .label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--text); font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* ---- Form controls (native + Dash wrappers) ---- */
+input, select, textarea {
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+}
+textarea { font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; }
+label { color: var(--text-dim); }
+
+/* ---- dcc.Dropdown (Dash 4 native component — NOT react-select) ---- */
+.dash-dropdown,
+.dash-dropdown-wrapper,
+.dash-dropdown-trigger {
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+}
+.dash-dropdown:focus-within,
+.dash-dropdown-trigger:focus {
+  border-color: var(--accent) !important;
+  outline: none !important;
+}
+.dash-dropdown-value,
+.dash-dropdown-value-item {
+  color: var(--text) !important;
+}
+.dash-dropdown-placeholder,
+.dash-dropdown-value.dash-dropdown-placeholder {
+  color: var(--text-mut) !important;
+}
+.dash-dropdown-trigger-icon,
+.dash-dropdown-clear,
+.dash-dropdown-search-icon {
+  color: var(--text-dim) !important;
+  fill: var(--text-dim) !important;
+}
+.dash-dropdown-content {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+.dash-dropdown-options {
+  background: var(--bg-card) !important;
+}
+.dash-dropdown-option {
+  background: var(--bg-card) !important;
+  color: var(--text) !important;
+  padding: 6px 10px !important;
+}
+.dash-dropdown-option:hover,
+.dash-dropdown-option[aria-selected="false"]:hover {
+  background: #3f4754 !important;
+  color: var(--text) !important;
+}
+.dash-dropdown-option[aria-selected="true"],
+.dash-dropdown-option.selected,
+.dash-dropdown-option.is-selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+.dash-dropdown-search,
+.dash-dropdown-search-container {
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border-soft) !important;
+}
+.dash-dropdown-search input {
+  background: transparent !important;
+  color: var(--text) !important;
+  border: none !important;
+}
+.dash-dropdown-value-count {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 1px 7px !important;
+  font-size: 10px !important;
+}
+.dash-dropdown-actions,
+.dash-dropdown-action-button {
+  background: var(--bg-card) !important;
+  color: var(--text-dim) !important;
+  border-color: var(--border-soft) !important;
+}
+.dash-dropdown-action-button:hover {
+  color: var(--text) !important;
+  background: #3f4754 !important;
+}
+
+/* ---- dcc.Slider tooltip (rc-slider) ---- */
+.rc-slider-rail      { background-color: var(--bg-input) !important; }
+.rc-slider-track     { background-color: var(--accent) !important; }
+.rc-slider-handle    { border-color: var(--accent) !important; background: var(--text) !important; }
+.rc-slider-mark-text { color: var(--text-mut) !important; font-size: 10px !important; }
+.rc-slider-mark-text-active { color: var(--text) !important; }
+.rc-slider-tooltip-inner {
+  background-color: var(--bg-card) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.rc-slider-tooltip-arrow { border-top-color: var(--bg-card) !important; }
+
+/* ---- dcc.Checklist / RadioItems ---- */
+.form-check-input {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border) !important;
+}
+.form-check-input:checked {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+.form-check-label, .dash-checklist label, .dash-radio label {
+  color: var(--text) !important;
+}
+
+/* ---- Buttons ---- */
+.btn-run {
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  border: none; color: white; font-weight: 600;
+  padding: 8px 18px; border-radius: 6px; cursor: pointer;
+  font-size: 13px;
+}
+.btn-run:hover  { filter: brightness(1.1); }
+.btn-run:active { filter: brightness(0.95); }
+.btn-run:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Generic Bootstrap button overrides — ensure readable on our bg */
+.btn {
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  font-size: 13px;
+}
+.btn:hover { background: var(--bg-card); color: var(--text); border-color: var(--accent); }
+
+/* ---- Tables (Bootstrap) ---- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text);
+  color: var(--text);
+}
+.table-dark {
+  --bs-table-bg: var(--bg-card) !important;
+  --bs-table-color: var(--text) !important;
+  --bs-table-striped-bg: var(--bg-panel) !important;
+  --bs-table-border-color: var(--border) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.table-dark th, .table-dark td {
+  border-color: var(--border-soft) !important;
+  color: var(--text) !important;
+}
+.table thead th { color: var(--text-dim) !important; font-weight: 600; }
+
+/* ---- Uploads (dcc.Upload drop zone) ---- */
+.upload-area {
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  color: var(--text-dim);
+  background: var(--bg-input);
+}
+
+/* ---- Misc ---- */
+hr { border-color: var(--border-soft); }
+a  { color: var(--accent); }
+a:hover { color: #7bb5ff; }
+code, kbd, pre {
+  background: var(--bg-input);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-soft);
+}
+
+/* Scrollbars inside right-column lists */
+.panel ::-webkit-scrollbar { width: 8px; height: 8px; }
+.panel ::-webkit-scrollbar-track { background: var(--bg-panel); }
+.panel ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.panel ::-webkit-scrollbar-thumb:hover { background: #4c5464; }

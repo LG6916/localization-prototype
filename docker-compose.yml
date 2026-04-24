@@ -1,0 +1,13 @@
+services:
+  loc-proto:
+    build: .
+    image: loc-proto:latest
+    container_name: loc-proto
+    restart: unless-stopped
+    ports:
+      - "8050:8050"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./cache:/app/cache
+    environment:
+      - PYTHONUNBUFFERED=1
