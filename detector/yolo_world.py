@@ -29,6 +29,16 @@ _MODEL_LOCK = threading.Lock()
 _MODEL_CACHE: dict[str, object] = {}
 _LAST_CLASSES: list[str] = []
 
+
+def _target_device() -> str:
+    """Pick GPU if available. Kept as a function (not a constant) so that
+    `CUDA_VISIBLE_DEVICES` changes at runtime are honored on model reload."""
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:
+        return "cpu"
+
 # Where to cache the YOLO weight file. Prefer the in-repo cache to keep the
 # project self-contained on an air-gapped machine.
 _DEFAULT_WEIGHT = Path(__file__).resolve().parent.parent / "cache" / "yolov8s-world.pt"
@@ -65,11 +75,48 @@ def load_model(weights: Optional[str] = None):
         if key not in _MODEL_CACHE:
             path = Path(key)
             if path.exists():
-                _MODEL_CACHE[key] = YOLOWorld(str(path))
+                model = YOLOWorld(str(path))
             else:
                 # Let ultralytics resolve / auto-download (e.g. 'yolov8s-world.pt')
-                _MODEL_CACHE[key] = YOLOWorld(key)
+                model = YOLOWorld(key)
+            # Move to GPU once at load time. `set_classes` will re-encode text
+            # on whatever device the CLIP model lives on, so we also force
+            # re-placement after each call (see `detect`).
+            try:
+                model.to(_target_device())
+            except Exception:
+                pass
+            _MODEL_CACHE[key] = model
         return _MODEL_CACHE[key]
+
+
+def _move_prompt_embeddings_to_device(model, device: str) -> None:
+    """After `YOLOWorld.set_classes`, the new class text embeddings can end up
+    on CPU while the detection head is on CUDA, causing::
+
+        RuntimeError: Expected all tensors to be on the same device, but got
+        index is on cpu, different from other tensors on cuda:0
+
+    This is a known ultralytics quirk with cached models. We brute-force it
+    by moving the whole underlying nn.Module to the target device — any
+    fresh CPU tensors inside get caught.
+    """
+    try:
+        model.to(device)
+    except Exception:
+        pass
+    # Belt-and-suspenders: ultralytics keeps text features on the detection
+    # head as `txt_feats` in some versions. Move that explicitly.
+    try:
+        import torch
+        inner = getattr(model, "model", None)
+        if inner is not None:
+            for name in ("txt_feats", "text_feats", "class_embeddings"):
+                feat = getattr(inner, name, None)
+                if isinstance(feat, torch.Tensor):
+                    setattr(inner, name, feat.to(device))
+    except Exception:
+        pass
 
 
 def detect(
@@ -104,16 +151,20 @@ def detect(
         return []
 
     model = load_model(weights)
-    # set_classes is a text encoder forward pass; skip if prompts unchanged
+    device = _target_device()
+    # set_classes is a CLIP text-encoder forward pass; skip if prompts unchanged.
+    # On re-entry with new prompts the fresh embeddings can land on CPU even
+    # though the YOLO backbone is on CUDA, so we re-place the whole model.
     global _LAST_CLASSES
     with _MODEL_LOCK:
         if prompts != _LAST_CLASSES:
             model.set_classes(list(prompts))
+            _move_prompt_embeddings_to_device(model, device)
             _LAST_CLASSES = list(prompts)
 
     result = model.predict(
         image_rgb, conf=float(conf), iou=float(iou),
-        max_det=int(max_det), verbose=False,
+        max_det=int(max_det), verbose=False, device=device,
     )[0]
     out: list[Detection2D] = []
     boxes = result.boxes
