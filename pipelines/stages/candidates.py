@@ -256,8 +256,55 @@ class CandidatesStage(Stage):
 
     # --- cluster centers as coarse seeds (used by cluster-seeded ICP) ---
     def _cluster_centers(self, ctx: PipelineContext) -> dict:
-        stats = self._dbscan(ctx)
-        return stats
+        """DBSCAN clusters, each → one candidate seed.
+
+        For sphere-like models we just use the cluster centroid with identity
+        rotation (sphere rotation is ambiguous anyway). For any other model we
+        PCA-align the model's principal axes to the cluster's axes so ICP gets
+        a rotation seed that's at most one flip ambiguity away from truth —
+        dramatically improves convergence on elongated parts like bolts.
+        """
+        pts = ctx.current_points
+        pcd = _to_open3d(pts)
+        labels = np.array(
+            pcd.cluster_dbscan(
+                eps=float(self.params["dbscan_eps_mm"]),
+                min_points=int(self.params["dbscan_min_points"]),
+                print_progress=False,
+            )
+        )
+        ctx.cluster_labels = labels
+        uniq = sorted(int(l) for l in set(labels) if l >= 0)
+        is_sphere = ctx.model_radius_mm is not None
+        dets: list[Detection] = []
+        for i, lbl in enumerate(uniq):
+            m = labels == lbl
+            if m.sum() < 4:
+                continue
+            cluster_pts = pts[m].astype(np.float32)
+            if is_sphere:
+                pose = np.eye(4)
+                pose[:3, 3] = cluster_pts.mean(axis=0)
+                extra = {"cluster_id": int(lbl), "n_points": int(m.sum()),
+                          "seed_kind": "centroid"}
+            else:
+                pose, pca_cost = _pca_align(cluster_pts, ctx.model_points)
+                extra = {"cluster_id": int(lbl), "n_points": int(m.sum()),
+                          "seed_kind": "pca_align",
+                          "pca_chamfer_mean_mm": float(pca_cost)}
+            dets.append(Detection(
+                instance_id=i,
+                pose=pose,
+                confidence=float(m.sum()) / len(pts),
+                method="cluster_center",
+                extra=extra,
+            ))
+        ctx.candidates = dets
+        return {
+            "n_clusters": len(uniq),
+            "noise_fraction": float((labels < 0).mean()),
+            "seed_kind": "pca_align" if not is_sphere else "centroid",
+        }
 
     # --- feature-based global registration ---
     def _feature_ransac(self, ctx: PipelineContext) -> dict:

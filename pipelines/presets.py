@@ -44,18 +44,29 @@ PRESETS: dict[str, list[tuple[str, str, dict]]] = {
             "voxel_scene_mm": 3.0, "voxel_model_mm": 2.0,
             "feature_radius_mul": 5.0, "max_candidates": 20,
         }),
-        ("refine", "icp_p2pl", {"max_corr_dist_mm": 4.0, "max_iter": 60, "multi_start": False}),
-        ("scoring", "standard", {"min_fitness": 0.15, "nms_distance_mm": 40.0}),
+        ("refine", "icp_p2pl", {"max_corr_dist_mm": 5.0, "max_iter": 60, "multi_start": False}),
+        # min_fitness is deliberately low: ICP fitness = fraction of model
+        # points with a scene correspondence, and for any single-view scan
+        # at most ~half the surface is visible, so 0.25 is a practical ceiling
+        # even for a pixel-perfect match. 0.08 admits partial/occluded hits
+        # without letting random RANSAC noise through.
+        ("scoring", "standard", {"min_fitness": 0.08, "nms_distance_mm": 40.0}),
     ],
     "C: Cluster-seeded ICP": [
         ("preprocess", "voxel+outlier", {"voxel_mm": 3.0}),
         ("background", "plane_ransac_multi", {
             "distance_threshold_mm": 4.0, "min_plane_fraction": 0.10, "max_planes": 3,
         }),
+        # cluster_centers now PCA-aligns non-sphere models, so multi_start is
+        # unnecessary for most parts — PCA gives a directly usable rotation
+        # seed. Left on as a safety net for cases where PCA is degenerate.
         ("candidates", "cluster_centers", {"dbscan_eps_mm": 8.0, "dbscan_min_points": 30}),
-        ("refine", "icp_p2pl", {"max_corr_dist_mm": 6.0, "max_iter": 40,
+        ("refine", "icp_p2pl", {"max_corr_dist_mm": 6.0, "max_iter": 50,
                                   "multi_start": True, "n_rotations": 4}),
-        ("scoring", "standard", {"min_fitness": 0.1, "nms_distance_mm": 60.0}),
+        # 0.10 keeps noise controlled on rotationally-symmetric parts
+        # (spheres, cylinders) where ICP is inherently ambiguous. Bolt-like
+        # parts with PCA seeding comfortably clear this threshold.
+        ("scoring", "standard", {"min_fitness": 0.10, "nms_distance_mm": 60.0}),
     ],
     "D: 2D-guided ROIs + multi-start ICP": [
         ("preprocess", "voxel+outlier", {"voxel_mm": 2.0}),
