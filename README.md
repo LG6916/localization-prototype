@@ -11,6 +11,11 @@ confidences, a 3D interactive visualization, and an optional gripper approach
 vector per instance. It also has a calibration tab that turns detections into a
 pairwise-distance precision report.
 
+**Companion docs.** [`SUMMARY.md`](./SUMMARY.md) is the one-pager overview
+(share it with stakeholders). [`BRAINSTORMING.md`](./BRAINSTORMING.md) is
+the running log of empirical findings from real test scenes — open that
+one during design meetings.
+
 ---
 
 ## 1. Layout

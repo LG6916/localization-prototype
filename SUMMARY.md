@@ -216,6 +216,36 @@ benchmarked, and demonstrated — in the same afternoon.
 
 ---
 
+## Empirical findings from real test scenes
+
+Tested so far on two Photoneo scans: a calibration-sphere rig and a bin of
+120 mm elongated machined parts. Early lessons that should inform the
+next-gen spec:
+
+- **PCA rotation seeding is load-bearing** — identity-rotation + multi-start
+  ICP fails on any part with a dominant axis (bolts, cylinders, rods);
+  per-cluster PCA alignment recovers convergence and is essentially free.
+- **FPFH is a narrow tool** — works on textured / asymmetric parts, fails
+  on smooth machined surfaces and on any rotationally-symmetric geometry.
+  Worth a load-time classifier to route parts away from B when FPFH will
+  fail.
+- **ICP fitness caps at ~0.3 for single-view scans** (self-occlusion). The
+  raw metric conflates "bad alignment" with "half the object isn't
+  visible, as expected". A fraction-of-visible-model metric would be
+  more honest.
+- **YOLO-World does NOT generalize** to niche industrial geometry with
+  structured-light illumination. Text-prompt 2D detection is useful when
+  parts look like natural-image classes; unreliable for custom machinery.
+- **Symmetric parts need dedicated pipelines**, not generic ones. The
+  degrees of freedom are fundamentally different (4-DoF sphere vs 6-DoF
+  generic pose).
+
+Full rationale, test-scene details, and spec recommendations in
+[`BRAINSTORMING.md`](./BRAINSTORMING.md) — the doc to open during design
+meetings.
+
+---
+
 ## Next steps — what we can discuss
 
 - **Point-Pair Features** (Drost et al., 2010) as a seventh pipeline,
