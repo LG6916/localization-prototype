@@ -39,9 +39,10 @@ def _target_device() -> str:
     except Exception:
         return "cpu"
 
-# Where to cache the YOLO weight file. Prefer the in-repo cache to keep the
-# project self-contained on an air-gapped machine.
-_DEFAULT_WEIGHT = Path(__file__).resolve().parent.parent / "cache" / "yolov8s-world.pt"
+# Where to find the YOLO weight file. Bundled with the repo in `assets/` so
+# the app works out-of-the-box on an air-gapped machine; falls through to
+# ultralytics' own download path if the file is missing.
+_DEFAULT_WEIGHT = Path(__file__).resolve().parent.parent / "assets" / "yolov8s-world.pt"
 
 
 @dataclass

@@ -5,12 +5,17 @@ uploads/
 .DS_Store
 .env
 
-# Model weights and checkpoints (auto-downloaded or hand-dropped)
+# Model weights and checkpoints — ignored by default so random auto-downloads
+# don't get committed. Anything *deliberately* bundled with the repo belongs
+# in assets/ and is whitelisted below.
 *.pt
 *.onnx
 *.bin
 *.pkl
 *.safetensors
+!assets/*.pt
+!assets/*.onnx
+!assets/*.safetensors
 
 # IDE cruft
 .vscode/
