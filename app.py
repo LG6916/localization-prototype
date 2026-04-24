@@ -312,7 +312,24 @@ def layout_localization() -> html.Div:
             # ---------- RIGHT: Details ----------
             dbc.Col(md=3, children=[
                 html.Div(className="panel", children=[
-                    html.H6("Detections"),
+                    html.Div(style={"display": "flex", "alignItems": "center",
+                                     "gap": "8px", "marginBottom": "8px"}, children=[
+                        html.H6("Detections", style={"margin": 0, "flex": "1"}),
+                        dcc.Dropdown(
+                            id="det-sort-key",
+                            options=[
+                                {"label": "confidence ↓", "value": "conf_desc"},
+                                {"label": "X ↑", "value": "x_asc"},
+                                {"label": "X ↓", "value": "x_desc"},
+                                {"label": "Y ↑", "value": "y_asc"},
+                                {"label": "Y ↓", "value": "y_desc"},
+                                {"label": "Z ↑ (near first)", "value": "z_asc"},
+                                {"label": "Z ↓ (far first)", "value": "z_desc"},
+                            ],
+                            value="conf_desc", clearable=False,
+                            style={"fontSize": "11px", "flex": "1"},
+                        ),
+                    ]),
                     html.Div(id="detection-list",
                              style={"maxHeight": "38vh", "overflowY": "auto"},
                              children=html.Div("No run yet.", className="muted")),
@@ -733,10 +750,11 @@ def tick_progress(n, cancel_clicks):
     Input("gripper-h", "value"),
     Input("gripper-fl", "value"),
     Input("gripper-pd", "value"),
+    Input("det-sort-key", "value"),
     prevent_initial_call=True,
 )
 def refresh_ui(ts, color_mode, layers, selected_id,
-                grip_en, gw, gh, gfl, gpd):
+                grip_en, gw, gh, gfl, gpd, sort_key):
     with SESSION_LOCK:
         ctx_ = SESSION.get("last_ctx")
         display = SESSION.get("display")
@@ -745,6 +763,24 @@ def refresh_ui(ts, color_mode, layers, selected_id,
         preset = SESSION.get("last_preset", "")
         model = SESSION.get("model")
         trace = SESSION.get("last_trace")
+
+    # Reorder detections by the chosen key and reassign instance_id so "#0"
+    # always refers to the same physical detection for a given sort mode
+    # (e.g., X-leftmost, highest-confidence, etc.) across pipelines and runs.
+    if ctx_ is not None and ctx_.detections:
+        _SORT_FNS = {
+            "conf_desc": lambda d: -d.confidence,
+            "x_asc":     lambda d: d.translation[0],
+            "x_desc":    lambda d: -d.translation[0],
+            "y_asc":     lambda d: d.translation[1],
+            "y_desc":    lambda d: -d.translation[1],
+            "z_asc":     lambda d: d.translation[2],
+            "z_desc":    lambda d: -d.translation[2],
+        }
+        key_fn = _SORT_FNS.get(sort_key or "conf_desc", _SORT_FNS["conf_desc"])
+        ctx_.detections.sort(key=key_fn)
+        for i, d in enumerate(ctx_.detections):
+            d.instance_id = i
 
     if ctx_ is None or display is None:
         if display is not None:
@@ -912,6 +948,17 @@ def on_detection_click(n_clicks_list, ids):
     if isinstance(triggered, dict) and "id" in triggered:
         return triggered["id"]
     return no_update
+
+
+# Sort-key changes reassign instance_ids in refresh_ui; clear any prior
+# selection since the stored ID now refers to a different detection.
+@app.callback(
+    Output("selected-instance-id", "data", allow_duplicate=True),
+    Input("det-sort-key", "value"),
+    prevent_initial_call=True,
+)
+def on_sort_change(_sort_key):
+    return None
 
 
 # ---- Calibration tab ----
